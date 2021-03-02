@@ -210,3 +210,8 @@ func chooseLocalSmallerFile(rawImageAbs, webpAbsPath string) string {
 		return webpAbsPath
 	}
 }
+
+func fileExists(name string) bool {
+	_, err := os.Stat(name)
+	return !os.IsNotExist(err)
+}

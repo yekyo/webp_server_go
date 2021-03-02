@@ -8,8 +8,10 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io/ioutil"
+	"os"
 	"path"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -17,14 +19,23 @@ import (
 	"golang.org/x/image/bmp"
 )
 
-func webpEncoder(p1, p2 string, quality float32, Log bool, c chan int) (err error) {
+func webpEncoder(rawImageAbs, webpAbsPath string, quality float32, Log bool, c chan int) (err error) {
 	// if convert fails, return error; success nil
 
-	log.Debugf("target: %s with quality of %f", path.Base(p1), quality)
+	// Create a lock file to prevent multiple conversion on one file at once
+	lockFile := webpAbsPath + ".lock"
+
+	for fileExists(lockFile) {
+		log.Debugf("lock of %s met, not converting and waiting for other request to complete.", lockFile)
+		time.Sleep(50 * time.Millisecond)
+	}
+	os.Create(lockFile)
+
+	log.Debugf("target: %s with quality of %f", path.Base(rawImageAbs), quality)
 	var buf bytes.Buffer
 	var img image.Image
 
-	data, err := ioutil.ReadFile(p1)
+	data, err := ioutil.ReadFile(rawImageAbs)
 	if err != nil {
 		chanErr(c)
 		return
@@ -44,7 +55,7 @@ func webpEncoder(p1, p2 string, quality float32, Log bool, c chan int) (err erro
 	}
 
 	if img == nil {
-		msg := "image file " + path.Base(p1) + " is corrupted or not supported"
+		msg := "image file " + path.Base(rawImageAbs) + " is corrupted or not supported"
 		log.Debug(msg)
 		err = errors.New(msg)
 		chanErr(c)
@@ -56,17 +67,20 @@ func webpEncoder(p1, p2 string, quality float32, Log bool, c chan int) (err erro
 		chanErr(c)
 		return
 	}
-	if err = ioutil.WriteFile(p2, buf.Bytes(), 0644); err != nil {
+	if err = ioutil.WriteFile(webpAbsPath, buf.Bytes(), 0644); err != nil {
 		log.Error(err)
 		chanErr(c)
 		return
 	}
 
 	if Log {
-		log.Info("Save to " + p2 + " ok!\n")
+		log.Info("Save to " + webpAbsPath + " ok!\n")
 	}
 
 	chanErr(c)
+
+	// Delete lockfile after conversion
+	defer os.Remove(lockFile)
 
 	return nil
 }

@@ -3,8 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/gofiber/fiber/v2"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
 	"os"
@@ -12,6 +10,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/gofiber/fiber/v2"
+	log "github.com/sirupsen/logrus"
 )
 
 func convert(c *fiber.Ctx) error {
@@ -120,7 +121,7 @@ func convert(c *fiber.Ctx) error {
 	c.Set("ETag", etag)
 	c.Set("X-Compression-Rate", getCompressionRate(rawImageAbs, webpAbsPath))
 	finalFile = chooseLocalSmallerFile(rawImageAbs, webpAbsPath)
-	defer os.Remove(webpAbsPath)
+	// defer os.Remove(webpAbsPath)
 
 	return c.SendFile(finalFile)
 
