@@ -120,6 +120,8 @@ func convert(c *fiber.Ctx) error {
 	c.Set("ETag", etag)
 	c.Set("X-Compression-Rate", getCompressionRate(rawImageAbs, webpAbsPath))
 	finalFile = chooseLocalSmallerFile(rawImageAbs, webpAbsPath)
+	defer os.Remove(webpAbsPath)
+
 	return c.SendFile(finalFile)
 
 }
