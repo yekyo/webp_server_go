@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"regexp"
 	"runtime"
@@ -12,6 +13,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	log "github.com/sirupsen/logrus"
 )
+import _ "net/http/pprof"
 
 func loadConfig(path string) Config {
 	jsonObject, err := os.Open(path)
@@ -113,7 +115,9 @@ Develop by WebP Server team. https://github.com/webp-sh`, version)
 
 	fmt.Printf("\n %c[1;32m%s%c[0m\n\n", 0x1B, banner, 0x1B)
 	fmt.Println("Webp-Server-Go is Running on http://" + listenAddress)
-
+	go func() {
+		http.ListenAndServe("0.0.0.0:8080", nil)
+	}()
 	_ = app.Listen(listenAddress)
 
 }
