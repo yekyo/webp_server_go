@@ -49,8 +49,7 @@ func webpEncoder(p1, p2 string, quality float32, Log bool, c chan int) (err erro
 		err = errors.New(msg)
 		return
 	}
-	// put value into channel
-	maxJobLimit <- 1
+
 	if err = webp.Encode(&buf, img, &webp.Options{Lossless: false, Quality: quality}); err != nil {
 		log.Error(err)
 		return
@@ -64,7 +63,5 @@ func webpEncoder(p1, p2 string, quality float32, Log bool, c chan int) (err erro
 		log.Info("Save to " + p2 + " ok!\n")
 	}
 
-	// defer will always execute after return, retrieve data from channel to free it
-	defer func() { _ = <-maxJobLimit }()
 	return nil
 }

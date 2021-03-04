@@ -103,6 +103,10 @@ func convert(c *fiber.Ctx) error {
 			}
 		}
 
+		// put value into channel
+		maxJobLimit <- 1
+		// defer will always execute after return, retrieve data from channel to free it
+		defer func() { _ = <-maxJobLimit }()
 		//for webp, we need to create dir first
 		err = os.MkdirAll(path.Dir(webpAbsPath), 0755)
 		q, _ := strconv.ParseFloat(config.Quality, 32)
