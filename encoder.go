@@ -18,6 +18,7 @@ import (
 )
 
 func webpEncoder(p1, p2 string, quality float32, Log bool, c chan int) (err error) {
+	// TODO we should remove param c since we're using a global channel
 	// if convert fails, return error; success nil
 
 	log.Debugf("target: %s with quality of %f", path.Base(p1), quality)
@@ -26,7 +27,6 @@ func webpEncoder(p1, p2 string, quality float32, Log bool, c chan int) (err erro
 
 	data, err := ioutil.ReadFile(p1)
 	if err != nil {
-		chanErr(c)
 		return
 	}
 
@@ -47,18 +47,16 @@ func webpEncoder(p1, p2 string, quality float32, Log bool, c chan int) (err erro
 		msg := "image file " + path.Base(p1) + " is corrupted or not supported"
 		log.Debug(msg)
 		err = errors.New(msg)
-		chanErr(c)
 		return
 	}
-
+	// put value into channel
+	maxJobLimit <- 1
 	if err = webp.Encode(&buf, img, &webp.Options{Lossless: false, Quality: quality}); err != nil {
 		log.Error(err)
-		chanErr(c)
 		return
 	}
 	if err = ioutil.WriteFile(p2, buf.Bytes(), 0644); err != nil {
 		log.Error(err)
-		chanErr(c)
 		return
 	}
 
@@ -66,7 +64,7 @@ func webpEncoder(p1, p2 string, quality float32, Log bool, c chan int) (err erro
 		log.Info("Save to " + p2 + " ok!\n")
 	}
 
-	chanErr(c)
-
+	// defer will always execute after return, retrieve data from channel to free it
+	defer func() { _ = <-maxJobLimit }()
 	return nil
 }

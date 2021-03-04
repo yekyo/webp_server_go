@@ -25,6 +25,8 @@ var (
 	releaseUrl               = "https://github.com/webp-sh/webp_server_go/releases/latest/download/"
 )
 
+var maxJobLimit = make(chan int, 5)
+
 const (
 	sampleConfig = `
 {
