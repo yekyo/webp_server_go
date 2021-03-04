@@ -10,12 +10,32 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync/atomic"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	log "github.com/sirupsen/logrus"
 )
 
+// maxJobCount, _ = strconv.ParseInt(config.MaxJobCount, 10, 64)// maxJobCounter = strconv.ParseInt(config.MaxJobCount, 10, 64)
+var currentJobCounter int64 = 0
+
+func changeCounter(delta int64) int64 {
+	return atomic.AddInt64(&currentJobCounter, delta)
+}
+
+func getCounter() int64 {
+	return atomic.LoadInt64(&currentJobCounter)
+}
+
 func convert(c *fiber.Ctx) error {
+
+	for getCounter() >= maxJobCount {
+		log.Debugf("Max job of %d met, not converting and waiting for other request to complete.", maxJobCount)
+		time.Sleep(50 * time.Millisecond)
+	}
+	changeCounter(1)
+
 	//basic vars
 	var reqURI, _ = url.QueryUnescape(c.Path()) // /mypic/123.jpg
 	var rawImageAbs string
@@ -122,6 +142,7 @@ func convert(c *fiber.Ctx) error {
 	c.Set("X-Compression-Rate", getCompressionRate(rawImageAbs, webpAbsPath))
 	finalFile = chooseLocalSmallerFile(rawImageAbs, webpAbsPath)
 	// defer os.Remove(webpAbsPath)
+	changeCounter(-1)
 
 	return c.SendFile(finalFile)
 

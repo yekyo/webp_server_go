@@ -10,11 +10,13 @@ type Config struct {
 	ImgPath      string   `json:"IMG_PATH"`
 	Quality      string   `json:"QUALITY"`
 	AllowedTypes []string `json:"ALLOWED_TYPES"`
+	MaxJobCount  string   `json:"MAX_JOB_COUNT"`
 	ExhaustPath  string   `json:"EXHAUST_PATH"`
 }
 
 var (
 	configPath               string
+	maxJobCount              int64
 	jobs                     int
 	dumpConfig, dumpSystemd  bool
 	verboseMode, showVersion bool
@@ -31,6 +33,7 @@ const (
   "HOST": "127.0.0.1",
   "PORT": "3333",
   "QUALITY": "80",
+  "MAX_JOB_COUNT": "2",
   "IMG_PATH": "./pics",
   "EXHAUST_PATH": "./exhaust",
   "ALLOWED_TYPES": ["jpg","png","jpeg","bmp"]

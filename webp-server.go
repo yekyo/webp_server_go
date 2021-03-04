@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"runtime"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -77,7 +78,7 @@ func main() {
 ▘ ▘▝▀▘▀▀ ▘   ▝▀ ▝▀▘▘   ▘ ▝▀▘▘   ▝▀ ▝▀
 
 Webp Server Go - v%s
-Develop by WebP Server team. https://github.com/webp-sh`, version)
+Developed by WebP Server team. https://github.com/webp-sh`, version)
 
 	deferInit()
 	// process cli params
@@ -103,16 +104,18 @@ Develop by WebP Server team. https://github.com/webp-sh`, version)
 	}
 
 	app := fiber.New(fiber.Config{
-		ServerHeader:          "Webp-Server-Go",
+		ServerHeader:          "WebP-Server-Go",
 		DisableStartupMessage: true,
 	})
 	app.Use(logger.New())
 
 	listenAddress := config.Host + ":" + config.Port
+	maxJobCount, _ = strconv.ParseInt(config.MaxJobCount, 10, 64)
+
 	app.Get("/*", convert)
 
 	fmt.Printf("\n %c[1;32m%s%c[0m\n\n", 0x1B, banner, 0x1B)
-	fmt.Println("Webp-Server-Go is Running on http://" + listenAddress)
+	fmt.Println("WebP Server Go is Running on http://" + listenAddress)
 	_ = app.Listen(listenAddress)
 
 }
