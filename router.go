@@ -30,12 +30,6 @@ func getCounter() int64 {
 
 func convert(c *fiber.Ctx) error {
 
-	for getCounter() >= maxJobCount {
-		log.Debugf("Max job of %d met, not converting and waiting for other request to complete.", maxJobCount)
-		time.Sleep(50 * time.Millisecond)
-	}
-	changeCounter(1)
-
 	//basic vars
 	var reqURI, _ = url.QueryUnescape(c.Path()) // /mypic/123.jpg
 	var rawImageAbs string
@@ -124,10 +118,17 @@ func convert(c *fiber.Ctx) error {
 			}
 		}
 
+		// Get global counter
+		for getCounter() >= maxJobCount {
+			log.Debugf("Max job of %d met, not converting and waiting for other request to complete.", maxJobCount)
+			time.Sleep(50 * time.Millisecond)
+		}
+		changeCounter(1)
 		//for webp, we need to create dir first
 		err = os.MkdirAll(path.Dir(webpAbsPath), 0755)
 		q, _ := strconv.ParseFloat(config.Quality, 32)
 		err = webpEncoder(rawImageAbs, webpAbsPath, float32(q), true, nil)
+		changeCounter(-1)
 
 		if err != nil {
 			log.Error(err)
@@ -142,7 +143,6 @@ func convert(c *fiber.Ctx) error {
 	c.Set("X-Compression-Rate", getCompressionRate(rawImageAbs, webpAbsPath))
 	finalFile = chooseLocalSmallerFile(rawImageAbs, webpAbsPath)
 	// defer os.Remove(webpAbsPath)
-	changeCounter(-1)
 
 	return c.SendFile(finalFile)
 
