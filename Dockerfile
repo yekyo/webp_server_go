@@ -7,10 +7,7 @@ COPY go.mod /build
 RUN cd /build && go mod download
 
 COPY . /build
-RUN cd /build && sed -i "s|.\/pics|${IMG_PATH}|g" config.json \
-&& sed -i "s|\"\"|\"${EXHAUST_PATH}\"|g" config.json \
-&& sed -i 's/127.0.0.1/0.0.0.0/g' config.json \
-&& make docker
+RUN cd /build && make docker
 
 
 
@@ -21,4 +18,5 @@ COPY --from=builder /build/config.json /etc/config.json
 
 WORKDIR /opt
 VOLUME /opt/exhaust
+EXPOSE 3000
 CMD ["/usr/bin/webp-server", "--config", "/etc/config.json"]

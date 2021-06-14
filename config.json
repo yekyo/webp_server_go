@@ -1,9 +1,9 @@
 {
-  "HOST": "127.0.0.1",
-  "PORT": "3333",
+  "HOST": "0.0.0.0",
+  "PORT": "3000",
   "QUALITY": "80",
-  "IMG_PATH": "./pics",
-  "EXHAUST_PATH": "./exhaust",
+  "IMG_PATH": "/var/www/html",
+  "EXHAUST_PATH": "/opt/exhaust",
   "ALLOWED_TYPES": [
     "jpg",
     "png",
