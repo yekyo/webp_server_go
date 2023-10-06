@@ -108,14 +108,14 @@ func cleanProxyCache(cacheImagePath string) {
 
 func genWebpAbs(RawImagePath string, ExhaustPath string, ImgFilename string, reqURI string) (string, string) {
 	// get file mod time
-	STAT, err := os.Stat(RawImagePath)
+	/*STAT, err := os.Stat(RawImagePath)
 	if err != nil {
 		log.Error(err.Error())
 		return "", ""
 	}
 	ModifiedTime := STAT.ModTime().Unix()
-	// webpFilename: abc.jpg.png -> abc.jpg.png.1582558990.webp
-	WebpFilename := fmt.Sprintf("%s.%d.webp", ImgFilename, ModifiedTime)
+	// webpFilename: abc.jpg.png -> abc.jpg.png.1582558990.webp*/
+	WebpFilename := fmt.Sprintf("%s.webp", ImgFilename)
 	cwd, _ := os.Getwd()
 
 	// /home/webp_server/exhaust/path/to/tsuki.jpg.1582558990.webp
