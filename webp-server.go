@@ -108,6 +108,16 @@ Develop by WebP Server team. https://github.com/webp-sh`, version)
 	})
 	app.Use(logger.New())
 
+    // ★新增: /healthz 路由
+    app.Get("/healthz", func(c *fiber.Ctx) error {
+        // 检查图片根目录是否可访问；你也可换成其他探针
+        if _, err := os.Stat(config.ImgPath); err != nil {
+            return c.Status(fiber.StatusServiceUnavailable).
+                JSON(fiber.Map{"status": "unhealthy"})
+        }
+        return c.JSON(fiber.Map{"status": "ok"})
+    })
+
 	listenAddress := config.Host + ":" + config.Port
 	app.Get("/*", convert)
 
