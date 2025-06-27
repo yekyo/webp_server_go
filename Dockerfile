@@ -1,46 +1,40 @@
-###############################################################################
-# syntax 行启用 BuildKit v1.6 语法，用于 buildx 注入 TARGETARCH/TARGETPLATFORM
-###############################################################################
 # syntax=docker/dockerfile:1.6
 
 ###############################################################################
-# 1. builder 阶段：使用 Go 官方多架构镜像
+# 1) builder 阶段                                                             #
 ###############################################################################
-ARG TARGETPLATFORM   # buildx 注入（linux/amd64、linux/arm64…）
-ARG TARGETARCH       # buildx 注入（amd64、arm64）
-
+ARG TARGETPLATFORM
 FROM --platform=$TARGETPLATFORM golang:1.22-alpine AS builder
 
-# ----- 系统依赖保持不变 -----
-ARG IMG_PATH=/opt/pics
-ARG EXHAUST_PATH=/opt/exhaust
-RUN apk update && apk add --no-cache alpine-sdk
+# <<< MOD ─ 安装 libwebp-dev（C 头文件 & 静态库）并留出 build 缓存
+RUN apk add --no-cache alpine-sdk libwebp-dev
 
-# ----- 复制 go.mod 先拉依赖 -----
 WORKDIR /build
+
+# 先拉依赖
 COPY go.mod ./
 RUN go mod download
 
-# ----- 复制全部源码 -----
+# 拷贝源码
 COPY . .
 
-# <<< MOD ─ 如果 Makefile 没做 GOOS/GOARCH 交叉编译，这里注入
-#            否则可删掉这行
+# <<< MOD ─ 默认 CGO_ENABLED=1；不再人为改 GOOS/GOARCH
 RUN --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH make docker
+    make docker   # 你的 Makefile “docker” 目标内部执行 `go build ...`
 
 ###############################################################################
-# 2. 运行阶段：极简 alpine (或 scratch)
+# 2) runtime 阶段                                                             #
 ###############################################################################
-FROM alpine AS runtime
+FROM alpine
 
-# ----- 拷贝可执行文件和配置 -----
-COPY --from=builder /build/webp-server  /usr/bin/webp-server
+# 运行期只需动态 libwebp（APK 自动带上）
+RUN apk add --no-cache libwebp
+
+# 拷贝二进制和配置
+COPY --from=builder /build/webp-server /usr/bin/webp-server
 COPY --from=builder /build/config.json /etc/config.json
 
-# ----- 运行目录、卷、端口 -----
 WORKDIR /opt
 VOLUME /opt/exhaust
 EXPOSE 3000
-
 CMD ["/usr/bin/webp-server", "--config", "/etc/config.json"]
