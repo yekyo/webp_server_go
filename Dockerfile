@@ -1,10 +1,6 @@
 # syntax=docker/dockerfile:1.6
-
-###############################################################################
-# 1) builder 阶段                                                             #
-###############################################################################
-ARG TARGETPLATFORM
-FROM --platform=$TARGETPLATFORM golang:1.22-alpine AS builder
+ARG TARGETARCH                   # 只需这一个
+FROM golang:1.22-alpine AS builder   # ← 去掉 --platform
 
 # <<< MOD ─ 安装 libwebp-dev（C 头文件 & 静态库）并留出 build 缓存
 RUN apk add --no-cache alpine-sdk libwebp-dev
